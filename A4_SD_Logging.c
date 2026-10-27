@@ -25,31 +25,8 @@
 #include "sensors.h"   // photocell and LM19 temperature sensor
 #include "sd_logger.h" // SD card logging
 #include "hardware/i2c.h"
-
-
-/* // Part 2;
 #include "bno08x.h"
-// You set up the bus; the driver never does (so other I2C parts can share it).
-i2c_init(i2c1, 100 * 1000);
-gpio_set_function(2, GPIO_FUNC_I2C);
-gpio_set_function(3, GPIO_FUNC_I2C);
-gpio_pull_up(2);
-gpio_pull_up(3);
 
-bno08x_config_t config = {
-    .i2c = i2c1, .address = BNO08X_ADDRESS_DEFAULT,
-    .int_pin = 12, .reset_pin = 13,   // or BNO08X_PIN_NOT_WIRED
-};
-if (!bno08x_init(&config)) { /* not found  }
-bno08x_enable_report(BNO08X_REPORT_ROTATION_VECTOR, 20000);   // every 20 ms
-
-while (true) {
-    bno08x_service();
-    bno08x_quaternion_t q;
-    if (bno08x_get_quaternion(BNO08X_REPORT_ROTATION_VECTOR, &q)) {
-        printf("%.4f %.4f %.4f %.4f %u\n", q.real, q.i, q.j, q.k, q.status);
-    }
-} */
 
 #define SAMPLE_PERIOD_MS 1000
 
@@ -80,6 +57,30 @@ static void scan_bus(void) {
     }
     printf("\r\n");
 }
+
+// README from bno08x
+// You set up the bus; the driver never does (so other I2C parts can share it).
+i2c_init(i2c1, 100 * 1000);
+gpio_set_function(2, GPIO_FUNC_I2C);
+gpio_set_function(3, GPIO_FUNC_I2C);
+gpio_pull_up(2);
+gpio_pull_up(3);
+
+bno08x_config_t config = {
+    .i2c = i2c1, .address = BNO08X_ADDRESS_DEFAULT,
+    .int_pin = 12, .reset_pin = 13,   // or BNO08X_PIN_NOT_WIRED
+};
+if (!bno08x_init(&config)) { /* not found */ }
+bno08x_enable_report(BNO08X_REPORT_ROTATION_VECTOR, 20000);   // every 20 ms
+
+while (true) {
+    bno08x_service();
+    bno08x_quaternion_t q;
+    if (bno08x_get_quaternion(BNO08X_REPORT_ROTATION_VECTOR, &q)) {
+        printf("%.4f %.4f %.4f %.4f %u\n", q.real, q.i, q.j, q.k, q.status);
+    }
+}
+
 
 int main()
 {
