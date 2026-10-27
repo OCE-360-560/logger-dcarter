@@ -35,8 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-# add_executable(A4_SD_Logging A4_SD_Logging.c )
-add_subdirectory(lib/pico_fatfs lib/bno08x)
+add_subdirectory(lib/pico_fatfs) add_subdirectory(lib\bno08x)
 
 add_executable(A4_SD_Logging A4_SD_Logging.c sensors.c sd_logger.c)
 
@@ -47,13 +46,11 @@ pico_set_program_version(A4_SD_Logging "0.1")
 pico_enable_stdio_uart(A4_SD_Logging 0)
 pico_enable_stdio_usb(A4_SD_Logging 1)
 
-target_link_libraries(A4_SD_Logging pico_stdlib 
-                        hardware_adc hardware_spi pico_fatfs
-                        hardware_i2c bno08x)
-
+ target_link_libraries(A4_SD_Logging pico_stdlib 
+                        hardware_adc hardware_spi pico_fatfs hardware_i2c bno08x)
+# target_link_libraries(A4_SD_Logging pico_stdlib hardware_i2c bno08x)
 # Add the standard library to the build
-#target_link_libraries(A4_SD_Logging
-#       pico_stdlib hardware_spi)
+
 
 # Add the standard include files to the build
 target_include_directories(A4_SD_Logging PRIVATE
