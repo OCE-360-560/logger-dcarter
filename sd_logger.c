@@ -93,11 +93,11 @@ bool sd_logger_write(double time_s, float lux, float temp_c)
     // f_sync(&log_file);
     // return (bw == strlen(line));
     char line[64];
-    int len = snprintf(line, sizeof line,
+     int len = snprintf(line, sizeof line,
                        //                           "%.3f, %.3f, %.7f, %.3f\r\n", time_s, photo_cell_volts, lux, temp_c);
                        "%.3f, %.7f, %.3f\r\n", time_s, lux, temp_c);
 
-    printf("%s", line);                 // Serial Monitor
+    // printf("%s", line);                 // Serial Monitor 
     f_write(&log_file, line, len, &bw); // into the buffer
     f_sync(&log_file);  
                     // onto the card
