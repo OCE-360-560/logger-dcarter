@@ -42,4 +42,7 @@ bool imu_init(i2c_inst_t *bus);
  * Returns true if a new reading arrived since the last call; false leaves pose unchanged.
  */
 bool imu_read_pose(imu_pose_t *pose);
+
+static void init_i2c_bus(void);
+
 #endif

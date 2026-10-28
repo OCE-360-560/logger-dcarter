@@ -40,41 +40,6 @@
 // README from bno08x
 // You set up the bus; the driver never does (so other I2C parts can share it).
 
-/** Set up the I2C bus that the IMU (and later the INA219) share. */
-static void init_i2c_bus(void)
-{
-    i2c_init(I2C_BUS, I2C_HZ);
-    gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(I2C_SDA_PIN);
-    gpio_pull_up(I2C_SCL_PIN);
-
-    // added as step 6 of lab 6, to initialize the IMU from bno08x.h
-    bno08x_config_t config = {
-        .i2c = i2c1,
-        .address = BNO08X_ADDRESS_DEFAULT,
-        .int_pin = 12,
-        .reset_pin = 13, // or BNO08X_PIN_NOT_WIRED
-    };
-    if (!bno08x_init(&config))
-    { /* not found */
-    }
-    bno08x_enable_report(BNO08X_REPORT_ROTATION_VECTOR, 20000); // every 20 ms
-
-    // in imu_init(), next to the rotation vector: one line per report you need
-    bno08x_enable_report(BNO08X_REPORT_ACCELEROMETER, 20000);  // m/s², with gravity
-    bno08x_enable_report(BNO08X_REPORT_GYROSCOPE, 20000);      // rad/s
-    bno08x_enable_report(BNO08X_REPORT_MAGNETIC_FIELD, 20000); // µT
-    // also: BNO08X_REPORT_LINEAR_ACCELERATION (gravity removed), _GRAVITY
-    // then, after bno08x_service():
-    bno08x_vector_t gyro;
-    if (bno08x_get_vector(BNO08X_REPORT_GYROSCOPE, &gyro))
-    { // true if new
-        printf("%.3f %.3f %.3f  status %u\r\n", gyro.x, gyro.y, gyro.z, gyro.status);
-    }
-}
-
-
 /** Print the address of every device that answers on the bus. */
 /* static void scan_bus(void)
 {
@@ -126,7 +91,7 @@ int main()
     {
         halt();
     }
-
+    imu_pose_t pose = {0};   // main owns the pose
     sleep_ms(SAMPLE_PERIOD_MS);
     while (true)
     {
@@ -138,7 +103,7 @@ int main()
             printf("Real: %.3f i: %.3f j: %.3f k: %.3f  status %u\r\n", q.real, q.i, q.j, q.k, q.status);
         } */
         
-        imu_read_pose(&pose);
+        imu_read_pose(&pose); // fills in main's pose; keeps the last one if nothing new arrived
         double time_s = to_ms_since_boot(get_absolute_time()) / 1000.0; // convert millisec to sec
 
         float lux = sensors_read_lux();        // read the photocell once, returns illuminance in lux
@@ -147,5 +112,8 @@ int main()
         if (!sd_logger_write(time_s, lux, temp_c))
             // printf("# SD write failed\r\n");
             sleep_ms(SAMPLE_PERIOD_MS);
+
+              printf("%.1f, %.1f, %.1f, %u\r\n",
+           pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy);
     }
 }
