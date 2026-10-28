@@ -35,7 +35,8 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_subdirectory(lib/pico_fatfs) add_subdirectory(lib\bno08x)
+add_subdirectory(lib/pico_fatfs)
+add_subdirectory(lib/bno08x)
 
 add_executable(A4_SD_Logging A4_SD_Logging.c sensors.c sd_logger.c)
 

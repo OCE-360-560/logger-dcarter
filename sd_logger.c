@@ -51,7 +51,6 @@ void halt(void){
     return; // return to main() and let it loop forever
 }
 
-
 /** Mount the card and open a file for appending.
  *   path:   file name on the card, e.g. "log.csv"
  *   header: written first, only if the file is new
