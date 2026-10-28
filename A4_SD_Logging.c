@@ -26,8 +26,9 @@
 #include "sd_logger.h" // SD card logging
 #include "hardware/i2c.h"
 #include "bno08x.h"
+#include "imu.h"
 
-#define SAMPLE_PERIOD_MS 1000
+#define SAMPLE_PERIOD_MS 100
 //  Assignmnt 6
 #define I2C_BUS i2c1
 #define I2C_SDA_PIN 2
@@ -72,8 +73,10 @@ static void init_i2c_bus(void)
         printf("%.3f %.3f %.3f  status %u\r\n", gyro.x, gyro.y, gyro.z, gyro.status);
     }
 }
+
+
 /** Print the address of every device that answers on the bus. */
-static void scan_bus(void)
+/* static void scan_bus(void)
 {
     printf("I2C scan:");
     for (int address = 0x08; address < 0x78; address++)
@@ -85,27 +88,27 @@ static void scan_bus(void)
         }
     }
     printf("\r\n");
-}
+} */
 
 int main()
 {
     stdio_init_all();
 
     sensors_init(); // initialize the ADC and both sensor pins
-
+    imu_init(I2C_BUS);  // initialize the IMU and start the rotation vector report
     init_i2c_bus(); // initialize the I2C bus for the IMU and INA219
-    bno08x_config_t imu_config = {
-        .i2c = I2C_BUS,
-        .address = BNO08X_ADDRESS_DEFAULT,
-        .int_pin = 12,
-        .reset_pin = 13,
-        // INT and RST are both required
-    };
-    if (!bno08x_init(&imu_config))
-    {
-        printf("# IMU init failed\r\n");
-        halt();
-    }
+    //  bno08x_config_t imu_config = {
+    //     .i2c = I2C_BUS,
+    //     .address = BNO08X_ADDRESS_DEFAULT,
+    //     .int_pin = 12,
+    //     .reset_pin = 13,
+    //     // INT and RST are both required
+    // };
+    // if (!bno08x_init(&imu_config))
+    // {
+    //     printf("# IMU init failed\r\n");
+    //     halt();
+    // }
     bno08x_enable_report(BNO08X_REPORT_ROTATION_VECTOR, 20000);
     // every 20 ms = 50 Hz
 
@@ -118,19 +121,24 @@ int main()
         printf("# SD open failed\r\n");
         halt();
     }
-    // Lab 6 step 7
+
+    if (!imu_init(I2C_BUS))
+    {
+        halt();
+    }
 
     sleep_ms(SAMPLE_PERIOD_MS);
     while (true)
     {
-        scan_bus();
-        bno08x_service();
+        // scan_bus();
+        /* bno08x_service();
         bno08x_quaternion_t q;
         if (bno08x_get_quaternion(BNO08X_REPORT_ROTATION_VECTOR, &q))
         {
             printf("Real: %.3f i: %.3f j: %.3f k: %.3f  status %u\r\n", q.real, q.i, q.j, q.k, q.status);
-        }
-
+        } */
+        
+        imu_read_pose(&pose);
         double time_s = to_ms_since_boot(get_absolute_time()) / 1000.0; // convert millisec to sec
 
         float lux = sensors_read_lux();        // read the photocell once, returns illuminance in lux

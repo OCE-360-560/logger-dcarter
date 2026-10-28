@@ -72,7 +72,9 @@ bool sd_logger_open(const char *path, const char *header)
     if (fr != FR_OK)
         printf("f_mount: %d\r\n", fr); // 0 means FR_OK
 
-    fr = f_open(&log_file, "multi_source_cali_ref.csv", FA_OPEN_APPEND | FA_WRITE);
+//    fr = f_open(&log_file, "multi_source_cali_ref.csv", FA_OPEN_APPEND | FA_WRITE);
+    fr = f_open(&log_file, "Logger_data.csv", FA_OPEN_APPEND | FA_WRITE);
+
     if (fr != FR_OK)
         printf("f_open: %d\r\n", fr);
     if (f_size(&log_file) == 0) // header, new file only
