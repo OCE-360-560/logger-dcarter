@@ -10,6 +10,7 @@
 #include "hardware/spi.h"
 #include "ff.h"      // FatFs: f_mount, f_open, f_write, f_sync
 #include "tf_card.h" // pico_fatfs: SD card pins and clock
+#include "imu.h"
 
 #define PIN_SCK 18
 #define PIN_TX 19 // PICO: to the card's DI
@@ -79,24 +80,24 @@ bool sd_logger_open(const char *path, const char *header)
         printf("f_open: %d\r\n", fr);
     if (f_size(&log_file) == 0) // header, new file only
     {
-        const char *header = "time_s, lux, temp_C\r\n";
+        // const char *header = "time_s, lux, temp_C\r\n";
+        const char *header = "Roll, Pitch, Yaw, Accuracy\r\n";
         f_write(&log_file, header, strlen(header), &bw);
     }
 };
 
 /** Append one line and sync it to the card.
  * Returns false if any part didn't reach the card. */
-// bool sd_logger_write(const char *line ,double time_s, float lux, float temp_c)
-bool sd_logger_write(double time_s, float lux, float temp_c)
-
+// bool sd_logger_write(double time_s, float lux, float temp_c)
+bool sd_logger_write(imu_pose_t *pose)
 {
     // f_write(&log_file, line, strlen(line), &bw);
     // f_sync(&log_file);
     // return (bw == strlen(line));
     char line[64];
      int len = snprintf(line, sizeof line,
-                       //                           "%.3f, %.3f, %.7f, %.3f\r\n", time_s, photo_cell_volts, lux, temp_c);
-                       "%.3f, %.7f, %.3f\r\n", time_s, lux, temp_c);
+                                                //   "%.3f, %.7f, %.3f\r\n", time_s, lux, temp_c);
+                       "%.4f, %.4f, %.4f, %.4f\r\n", pose->roll_deg, pose->pitch_deg, pose->yaw_deg, pose->accuracy);
 
     // printf("%s", line);                 // Serial Monitor 
     f_write(&log_file, line, len, &bw); // into the buffer

@@ -60,8 +60,8 @@ int main()
     stdio_init_all();
 
     sensors_init(); // initialize the ADC and both sensor pins
-    imu_init(I2C_BUS);  // initialize the IMU and start the rotation vector report
-    init_i2c_bus(); // initialize the I2C bus for the IMU and INA219
+    sd_logger_init(); // initialize the SD card and SPI pins
+
     //  bno08x_config_t imu_config = {
     //     .i2c = I2C_BUS,
     //     .address = BNO08X_ADDRESS_DEFAULT,
@@ -74,10 +74,11 @@ int main()
     //     printf("# IMU init failed\r\n");
     //     halt();
     // }
-    bno08x_enable_report(BNO08X_REPORT_ROTATION_VECTOR, 20000);
+   // bno08x_enable_report(BNO08X_REPORT_ROTATION_VECTOR, 20000);
     // every 20 ms = 50 Hz
 
-    sd_logger_init(); // initialize the SD card and SPI pins
+    init_i2c_bus(); // initialize the I2C bus for the IMU and INA219
+    imu_init(I2C_BUS);  // initialize the IMU and start the rotation vector report
 
     sleep_ms(SAMPLE_PERIOD_MS);
 
@@ -109,7 +110,8 @@ int main()
         float lux = sensors_read_lux();        // read the photocell once, returns illuminance in lux
         float temp_c = sensors_read_celsius(); // read the LM19 once, returns temperature in
 
-        if (!sd_logger_write(time_s, lux, temp_c))
+        //  if (!sd_logger_write(time_s, lux, temp_c))
+        if (!sd_logger_write(&pose))
             // printf("# SD write failed\r\n");
             sleep_ms(SAMPLE_PERIOD_MS);
 
