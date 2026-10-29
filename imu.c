@@ -109,4 +109,13 @@ bool imu_read_pose(imu_pose_t *pose)
     pose->accuracy = quaternion.status;
     fill_euler_angles(pose);
     return true;
+
+}
+
+void imu_tare(void)
+{
+    if (!bno08x_tare_now(BNO08X_TARE_BASIS_ROTATION_VECTOR, BNO08X_TARE_BASIS_ROTATION_VECTOR))
+    {
+        printf("# IMU tare failed\r\n");
+    }
 }

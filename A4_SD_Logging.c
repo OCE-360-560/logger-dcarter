@@ -65,20 +65,14 @@ int main()
     sensors_init();   // initialize the ADC and both sensor pins
     sd_logger_init(); // initialize the SD card and SPI pins
 
-    //  bno08x_config_t imu_config = {
-    //     .i2c = I2C_BUS,
-    //     .address = BNO08X_ADDRESS_DEFAULT,
-    //     .int_pin = 12,
-    //     .reset_pin = 13,
-    //     // INT and RST are both required
-    // };
-    // if (!bno08x_init(&imu_config))
+    // // Stretch goal: change the orientation reference by taring the IMU
+    // printf("Press the Y key to activate the function tare to change orientation reference\n");
+    // int key;
+    // scanf("%d", &key);  // Reads a key press (integer)
+    // if (key == 'y' || key == 'Y')
     // {
-    //     printf("# IMU init failed\r\n");
-    //     halt();
+    //     imu_tare();
     // }
-    // bno08x_enable_report(BNO08X_REPORT_ROTATION_VECTOR, 20000);
-    // every 20 ms = 50 Hz
 
     init_i2c_bus();    // initialize the I2C bus for the IMU and INA219
     imu_init(I2C_BUS); // initialize the IMU and start the rotation vector report
