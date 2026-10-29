@@ -30,6 +30,7 @@
 
 #define SAMPLE_PERIOD_MS 100
 #define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy\r\n"
+#define PATH "Logger_data_v1.csv" // file name on the SD card
 
 //  Assignmnt 6
 #define I2C_BUS i2c1
@@ -61,7 +62,7 @@ int main()
 {
     stdio_init_all();
 
-    sensors_init(); // initialize the ADC and both sensor pins
+    sensors_init();   // initialize the ADC and both sensor pins
     sd_logger_init(); // initialize the SD card and SPI pins
 
     //  bno08x_config_t imu_config = {
@@ -76,15 +77,15 @@ int main()
     //     printf("# IMU init failed\r\n");
     //     halt();
     // }
-   // bno08x_enable_report(BNO08X_REPORT_ROTATION_VECTOR, 20000);
+    // bno08x_enable_report(BNO08X_REPORT_ROTATION_VECTOR, 20000);
     // every 20 ms = 50 Hz
 
-    init_i2c_bus(); // initialize the I2C bus for the IMU and INA219
-    imu_init(I2C_BUS);  // initialize the IMU and start the rotation vector report
+    init_i2c_bus();    // initialize the I2C bus for the IMU and INA219
+    imu_init(I2C_BUS); // initialize the IMU and start the rotation vector report
 
     sleep_ms(SAMPLE_PERIOD_MS);
 
-    if (!sd_logger_open("Logger_data.csv", LOG_HEADER))
+    if (!sd_logger_open(PATH, LOG_HEADER))
     {
         printf("# SD open failed\r\n");
         halt();
@@ -94,31 +95,28 @@ int main()
     {
         halt();
     }
-    imu_pose_t pose = {0};   // main owns the pose
+    imu_pose_t pose = {0}; // main owns the pose
     sleep_ms(SAMPLE_PERIOD_MS);
     while (true)
     {
-        // scan_bus();
-        /* bno08x_service();
-        bno08x_quaternion_t q;
-        if (bno08x_get_quaternion(BNO08X_REPORT_ROTATION_VECTOR, &q))
-        {
-            printf("Real: %.3f i: %.3f j: %.3f k: %.3f  status %u\r\n", q.real, q.i, q.j, q.k, q.status);
-        } */
-        
-        imu_read_pose(&pose); // fills in main's pose; keeps the last one if nothing new arrived
         double time_s = to_ms_since_boot(get_absolute_time()) / 1000.0; // convert millisec to sec
 
         float lux = sensors_read_lux();        // read the photocell once, returns illuminance in lux
         float temp_c = sensors_read_celsius(); // read the LM19 once, returns temperature in
 
-        //  if (!sd_logger_write(time_s, lux, temp_c))
-        if (!sd_logger_write(time_s, lux, temp_c,&pose))
-            // printf("# SD write failed\r\n");
-            sleep_ms(SAMPLE_PERIOD_MS);
+        imu_read_pose(&pose); // fills in main's pose; keeps the last one if nothing new arrived
 
-              printf("Roll, Pitch, Yaw, Accuracy\r\n");
-              printf("%.1f, %.1f, %.1f, %u\r\n",
-                     pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy);
+        //  if (!sd_logger_write(time_s, lux, temp_c))
+        if (!sd_logger_write(time_s, lux, temp_c, &pose))
+            // printf("# SD write failed\r\n");
+
+            printf("Roll, Pitch, Yaw, Accuracy\r\n");
+             printf("%.1f, %.1f, %.1f, %u\r\n",
+                   pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy); 
+       /*  printf("Time, lux, temp_c\r\n");
+        printf("%.3f, %.3f, %.3f\r\n",
+               time_s, lux, temp_c); */
+
+        sleep_ms(SAMPLE_PERIOD_MS);
     }
 }

@@ -74,7 +74,7 @@ bool sd_logger_open(const char *path, const char *header)
         printf("f_mount: %d\r\n", fr); // 0 means FR_OK
 
 //    fr = f_open(&log_file, "multi_source_cali_ref.csv", FA_OPEN_APPEND | FA_WRITE);
-    fr = f_open(&log_file, "Logger_data.csv", FA_OPEN_APPEND | FA_WRITE);
+    fr = f_open(&log_file, path, FA_OPEN_APPEND | FA_WRITE);
 
     if (fr != FR_OK)
         printf("f_open: %d\r\n", fr);
@@ -89,13 +89,13 @@ bool sd_logger_open(const char *path, const char *header)
 /** Append one line and sync it to the card.
  * Returns false if any part didn't reach the card. */
 // bool sd_logger_write(double time_s, float lux, float temp_c)
-bool sd_logger_write(double time_s, float lux, float temp_c,imu_pose_t *pose)
+bool sd_logger_write(double time_s, float lux, float temp_c, imu_pose_t *pose)
 {
     // f_write(&log_file, line, strlen(line), &bw);
     // f_sync(&log_file);
     // return (bw == strlen(line));
     char line[128];
-     int len =  snprintf(line, sizeof line, "%.3f, %.1f, %.1f, %.4f, %.4f, %.4f, %.4f, %.1f, %.1f, %.1f, %u\r\n",
+     int len =  snprintf(line, sizeof line, "%.3f, %.3f, %.3f, %.4f, %.4f, %.4f, %.4f, %.1f, %.1f, %.1f, %u\r\n",
              time_s, lux, temp_c, pose->qw, pose->qx, pose->qy, pose->qz,
              pose->roll_deg, pose->pitch_deg, pose->yaw_deg, pose->accuracy);
 

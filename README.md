@@ -10,11 +10,12 @@ time_s,     lux,        temp_c
 3.315	    81.1855774	22.018
 
 ## Hardware and wiring
-| Part               | Pico 2 pin       |
-|--------------------|------------------|
-| Photocell divider  | GP26             |
-| LM19 Vout          | GP27             |
-| SD CLK, DI, DO, CS | GP18, 19, 20, 21 |
+| Part                  | Pico 2 pin       |
+|-----------------------|------------------|
+| Photocell divider     | GP26             |
+| LM19 Vout             | GP27             |
+| SD CLK, DI, DO, CS    | GP18, 19, 20, 21 |
+
 ## Build and run
 1. Instal VS code and Rabserryy Pi Pico 2. extenison insid VS code
 CLone this repo. Trust the code when prompted
