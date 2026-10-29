@@ -81,7 +81,7 @@ bool sd_logger_open(const char *path, const char *header)
     if (f_size(&log_file) == 0) // header, new file only
     {
         // const char *header = "time_s, lux, temp_C\r\n";
-        const char *header = "Roll, Pitch, Yaw, Accuracy\r\n";
+        // const char *header = "Roll, Pitch, Yaw, Accuracy\r\n";
         f_write(&log_file, header, strlen(header), &bw);
     }
 };
@@ -89,15 +89,15 @@ bool sd_logger_open(const char *path, const char *header)
 /** Append one line and sync it to the card.
  * Returns false if any part didn't reach the card. */
 // bool sd_logger_write(double time_s, float lux, float temp_c)
-bool sd_logger_write(imu_pose_t *pose)
+bool sd_logger_write(double time_s, float lux, float temp_c,imu_pose_t *pose)
 {
     // f_write(&log_file, line, strlen(line), &bw);
     // f_sync(&log_file);
     // return (bw == strlen(line));
-    char line[64];
-     int len = snprintf(line, sizeof line,
-                                                //   "%.3f, %.7f, %.3f\r\n", time_s, lux, temp_c);
-                       "%.4f, %.4f, %.4f, %.4f\r\n", pose->roll_deg, pose->pitch_deg, pose->yaw_deg, pose->accuracy);
+    char line[128];
+     int len =  snprintf(line, sizeof line, "%.3f, %.1f, %.1f, %.4f, %.4f, %.4f, %.4f, %.1f, %.1f, %.1f, %u\r\n",
+             time_s, lux, temp_c, pose->qw, pose->qx, pose->qy, pose->qz,
+             pose->roll_deg, pose->pitch_deg, pose->yaw_deg, pose->accuracy);
 
     // printf("%s", line);                 // Serial Monitor 
     f_write(&log_file, line, len, &bw); // into the buffer

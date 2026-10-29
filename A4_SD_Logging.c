@@ -29,6 +29,8 @@
 #include "imu.h"
 
 #define SAMPLE_PERIOD_MS 100
+#define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy\r\n"
+
 //  Assignmnt 6
 #define I2C_BUS i2c1
 #define I2C_SDA_PIN 2
@@ -82,7 +84,7 @@ int main()
 
     sleep_ms(SAMPLE_PERIOD_MS);
 
-    if (!sd_logger_open("multi_source_cali_ref.csv", "time_s, lux, temp_C\r\n"))
+    if (!sd_logger_open("Logger_data.csv", LOG_HEADER))
     {
         printf("# SD open failed\r\n");
         halt();
@@ -111,11 +113,12 @@ int main()
         float temp_c = sensors_read_celsius(); // read the LM19 once, returns temperature in
 
         //  if (!sd_logger_write(time_s, lux, temp_c))
-        if (!sd_logger_write(&pose))
+        if (!sd_logger_write(time_s, lux, temp_c,&pose))
             // printf("# SD write failed\r\n");
             sleep_ms(SAMPLE_PERIOD_MS);
 
+              printf("Roll, Pitch, Yaw, Accuracy\r\n");
               printf("%.1f, %.1f, %.1f, %u\r\n",
-           pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy);
+                     pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy);
     }
 }
