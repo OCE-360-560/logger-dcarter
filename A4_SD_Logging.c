@@ -30,7 +30,7 @@
 
 #define SAMPLE_PERIOD_MS 100
 #define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy\r\n"
-#define PATH "Logger_data_v1.csv" // file name on the SD card
+#define PATH "Logger_data_v3.csv" // file name on the SD card
 
 //  Assignmnt 6
 #define I2C_BUS i2c1
@@ -44,19 +44,6 @@
 // You set up the bus; the driver never does (so other I2C parts can share it).
 
 /** Print the address of every device that answers on the bus. */
-/* static void scan_bus(void)
-{
-    printf("I2C scan:");
-    for (int address = 0x08; address < 0x78; address++)
-    { // 0x00-0x07, 0x78-0x7F are reserved
-        uint8_t ignored;
-        if (i2c_read_timeout_us(I2C_BUS, address, &ignored, 1, false, SCAN_TIMEOUT_US) >= 0)
-        {
-            printf("Lab 6 exercise 1:  0x%02X", address);
-        }
-    }
-    printf("\r\n");
-} */
 
 int main()
 {
@@ -65,19 +52,11 @@ int main()
     sensors_init();   // initialize the ADC and both sensor pins
     sd_logger_init(); // initialize the SD card and SPI pins
 
-    // // Stretch goal: change the orientation reference by taring the IMU
-    // printf("Press the Y key to activate the function tare to change orientation reference\n");
-    // int key;
-    // scanf("%d", &key);  // Reads a key press (integer)
-    // if (key == 'y' || key == 'Y')
-    // {
-    //     imu_tare();
-    // }
-
     init_i2c_bus();    // initialize the I2C bus for the IMU and INA219
     imu_init(I2C_BUS); // initialize the IMU and start the rotation vector report
 
     sleep_ms(SAMPLE_PERIOD_MS);
+    // sleep_until(SAMPLE_PERIOD_MS);
 
     if (!sd_logger_open(PATH, LOG_HEADER))
     {
@@ -91,8 +70,20 @@ int main()
     }
     imu_pose_t pose = {0}; // main owns the pose
     sleep_ms(SAMPLE_PERIOD_MS);
+    // sleep_until(SAMPLE_PERIOD_MS);
     while (true)
     {
+        // Stretch goal: change the orientation reference by taring the IMU
+        int key = getchar_timeout_us(0); // PICO_ERROR_TIMEOUT if nothing was typed
+        if (key == 'y')                  // type y in the Serial Monitor's send box
+        {
+            imu_tare();
+        }
+        // else
+        // {
+        //     imu_tare_clear();
+        // }
+
         double time_s = to_ms_since_boot(get_absolute_time()) / 1000.0; // convert millisec to sec
 
         float lux = sensors_read_lux();        // read the photocell once, returns illuminance in lux
@@ -105,12 +96,13 @@ int main()
             // printf("# SD write failed\r\n");
 
             printf("Roll, Pitch, Yaw, Accuracy\r\n");
-             printf("%.1f, %.1f, %.1f, %u\r\n",
-                   pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy); 
-       /*  printf("Time, lux, temp_c\r\n");
-        printf("%.3f, %.3f, %.3f\r\n",
-               time_s, lux, temp_c); */
+        printf("%.1f, %.1f, %.1f, %u\r\n",
+               pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy);
+        /*  printf("Time, lux, temp_c\r\n");
+         printf("%.3f, %.3f, %.3f\r\n",
+                time_s, lux, temp_c); */
 
         sleep_ms(SAMPLE_PERIOD_MS);
+        // sleep_until(time_s + SAMPLE_PERIOD_MS);
     }
 }

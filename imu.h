@@ -45,7 +45,7 @@ bool imu_read_pose(imu_pose_t *pose);
 
 void init_i2c_bus(void);
 
-void imu_tare(void);
-
+bool imu_tare(void);
+bool imu_tare_clear(void);
 
 #endif
