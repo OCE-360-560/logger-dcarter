@@ -109,4 +109,16 @@ bool imu_read_pose(imu_pose_t *pose)
     pose->accuracy = quaternion.status;
     fill_euler_angles(pose);
     return true;
+
+}
+
+bool imu_tare(void)
+{
+   return  bno08x_tare_now(0x04, 0x00);  // Tare all axes (0x07) or heading only (0x04,Z) with respect to the default basis (0x00)
+            printf("Tare function activated. Orientation reference changed.\r\n");
+}
+
+bool imu_tare_clear(void)
+{
+   return  bno08x_clear_tare();  
 }
