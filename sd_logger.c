@@ -58,14 +58,6 @@ void halt(void){
  * Returns false if the card or file can't be opened. */
 bool sd_logger_open(const char *path, const char *header)
 {
-/*  uint8_t rx;
-        gpio_put(PIN_CS, 0); // select
-        spi_write_read_blocking(spi0, &tx, &rx, 1);
-        gpio_put(PIN_CS, 1); // release
-        printf("sent 0x%02X, got 0x%02X  %s\r\n",
-               tx, rx, rx == tx ? "match" : "DIFFERENT");
-        tx++; // next bit pattern */
-
     // Step 10   File save name
     pico_fatfs_set_config(&sd_config); // before f_mount
 
@@ -73,15 +65,12 @@ bool sd_logger_open(const char *path, const char *header)
     if (fr != FR_OK)
         printf("f_mount: %d\r\n", fr); // 0 means FR_OK
 
-//    fr = f_open(&log_file, "multi_source_cali_ref.csv", FA_OPEN_APPEND | FA_WRITE);
     fr = f_open(&log_file, path, FA_OPEN_APPEND | FA_WRITE);
 
     if (fr != FR_OK)
         printf("f_open: %d\r\n", fr);
     if (f_size(&log_file) == 0) // header, new file only
     {
-        // const char *header = "time_s, lux, temp_C\r\n";
-        // const char *header = "Roll, Pitch, Yaw, Accuracy\r\n";
         f_write(&log_file, header, strlen(header), &bw);
     }
 };

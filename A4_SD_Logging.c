@@ -15,22 +15,24 @@
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "hardware/spi.h"
-#include "ff.h"        // FatFs: f_mount, f_open, f_write, f_sync
 #include "tf_card.h"   // pico_fatfs: SD card pins and clock
 #include "sensors.h"   // photocell and LM19 temperature sensor
 #include "sd_logger.h" // SD card logging
 #include "hardware/i2c.h"
 #include "bno08x.h"
 #include "imu.h"
+#include "gps.h"
+#include "air530.h"
 
 #define SAMPLE_PERIOD_MS 100
 #define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy\r\n"
 #define PATH "Logger_data_v1.csv" // file name on the SD card
+
+// #define LOG_HEADER_GPS "fix_date, fix_time, gps_valid, lat_deg, lon_deg, alt_m, satellites, hdop, speed_mps,course_deg\r\n"
+#define PATH_GPS "nmea.txt" // file name on the SD card
 
 //  Assignmnt 6
 #define I2C_BUS i2c1
@@ -39,24 +41,6 @@
 // 100 kHz, not 400: the BNO080 stretches the clock, and slower is safer
 #define I2C_HZ (100 * 1000)
 #define SCAN_TIMEOUT_US 10000
-
-// README from bno08x
-// You set up the bus; the driver never does (so other I2C parts can share it).
-
-/** Print the address of every device that answers on the bus. */
-/* static void scan_bus(void)
-{
-    printf("I2C scan:");
-    for (int address = 0x08; address < 0x78; address++)
-    { // 0x00-0x07, 0x78-0x7F are reserved
-        uint8_t ignored;
-        if (i2c_read_timeout_us(I2C_BUS, address, &ignored, 1, false, SCAN_TIMEOUT_US) >= 0)
-        {
-            printf("Lab 6 exercise 1:  0x%02X", address);
-        }
-    }
-    printf("\r\n");
-} */
 
 int main()
 {
@@ -85,18 +69,48 @@ int main()
         halt();
     }
 
+    gps_start_raw_log(PATH_GPS);
+
     if (!imu_init(I2C_BUS))
     {
         halt();
     }
     imu_pose_t pose = {0}; // main owns the pose
+
+    // GPS Update
+    //gps_fix_t fix = {0}; // one variable; every member starts at 0
+    // fix.latitude_deg;
+    // fix.valid;
+    // fix.longitude_deg;
+    // fix.altitude_m;
+    // fix.satellites_used;
+    // fix.hdop;
+    // fix.course_deg;
+    // fix.speed_mps;
+    // fix.fix_date[11];
+    // fix.fix_time[13];
+
+    //gps_update(&fix); // & passes fix's address, so the function can fill in main's fix
+
+
+        // GPS test
+        // test first, before gps_init(): no real sentence can arrive yet
+        air530_parse("$GNRMC,143012.000,A,4129.1234,N,07131.5678,W,0.12,87.30,291026,,,A,V*2E");
+        // gps_init(); // sets up the UART and the driver, on the kit pins
+        gps_fix_t test = {0};
+        if (true)
+        {
+            printf("test: %s %.6f, %.6f\r\n", test.fix_time, test.latitude_deg, test.longitude_deg);
+        }
+        // expect: test: 14:30:12.000 41.485390, -71.52613
+
+
     sleep_ms(SAMPLE_PERIOD_MS);
     while (true)
     {
         double time_s = to_ms_since_boot(get_absolute_time()) / 1000.0; // convert millisec to sec
-
-        float lux = sensors_read_lux();        // read the photocell once, returns illuminance in lux
-        float temp_c = sensors_read_celsius(); // read the LM19 once, returns temperature in
+        float lux = sensors_read_lux();                                 // read the photocell once, returns illuminance in lux
+        float temp_c = sensors_read_celsius();                          // read the LM19 once, returns temperature in
 
         imu_read_pose(&pose); // fills in main's pose; keeps the last one if nothing new arrived
 
@@ -105,11 +119,11 @@ int main()
             // printf("# SD write failed\r\n");
 
             printf("Roll, Pitch, Yaw, Accuracy\r\n");
-             printf("%.1f, %.1f, %.1f, %u\r\n",
-                   pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy); 
-       /*  printf("Time, lux, temp_c\r\n");
-        printf("%.3f, %.3f, %.3f\r\n",
-               time_s, lux, temp_c); */
+        printf("%.1f, %.1f, %.1f, %u\r\n",
+               pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy);
+        /*  printf("Time, lux, temp_c\r\n");
+         printf("%.3f, %.3f, %.3f\r\n",
+                time_s, lux, temp_c); */
 
         sleep_ms(SAMPLE_PERIOD_MS);
     }
