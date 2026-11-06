@@ -36,8 +36,5 @@ typedef struct
 bool gps_init(void);                        // the UART and the driver, on the kit pins
 bool gps_update(gps_fix_t *fix);            // never waits; true once per new fix
 bool gps_start_raw_log(const char *path);  // every sentence to a file on the SD card
-void write_raw_sentence(const char *sentence, gps_fix_t *fix); // write one line to the SD card
-void sd_logger_close(void);
-
 
 #endif

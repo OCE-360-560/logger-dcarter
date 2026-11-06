@@ -39,7 +39,7 @@ add_subdirectory(lib/pico_fatfs)
 add_subdirectory(lib/bno08x)
 add_subdirectory(lib/air530)
 
-add_executable(A4_SD_Logging A4_SD_Logging.c sensors.c sd_logger.c imu.c )
+add_executable(A4_SD_Logging A4_SD_Logging.c sensors.c sd_logger.c imu.c gps.c)
 
 pico_set_program_name(A4_SD_Logging "A4_SD_Logging")
 pico_set_program_version(A4_SD_Logging "0.1")

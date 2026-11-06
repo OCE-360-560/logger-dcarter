@@ -60,7 +60,7 @@ int main()
 
     init_i2c_bus();    // initialize the I2C bus for the IMU and INA219
     imu_init(I2C_BUS); // initialize the IMU and start the rotation vector report
-
+    
     sleep_ms(SAMPLE_PERIOD_MS);
 
     if (!sd_logger_open(PATH, LOG_HEADER))
@@ -69,45 +69,34 @@ int main()
         halt();
     }
 
-    gps_start_raw_log(PATH_GPS);
-
     if (!imu_init(I2C_BUS))
     {
         halt();
     }
     imu_pose_t pose = {0}; // main owns the pose
 
+    gps_fix_t fix = {0}; // main owns the fix
+
+    // gps_init();        // initialize the GPS and start the UART and driver
+    //gps_start_raw_log("nemean_lion.txt");
+
     // GPS Update
-    //gps_fix_t fix = {0}; // one variable; every member starts at 0
-    // fix.latitude_deg;
-    // fix.valid;
-    // fix.longitude_deg;
-    // fix.altitude_m;
-    // fix.satellites_used;
-    // fix.hdop;
-    // fix.course_deg;
-    // fix.speed_mps;
-    // fix.fix_date[11];
-    // fix.fix_time[13];
+    // gps_update(&fix); // & passes fix's address, so the function can fill in main's fix
 
-    //gps_update(&fix); // & passes fix's address, so the function can fill in main's fix
-
-
-        // GPS test
+    sleep_ms(SAMPLE_PERIOD_MS);
+    while (true)
+    {
+        // GPS test 
         // test first, before gps_init(): no real sentence can arrive yet
         air530_parse("$GNRMC,143012.000,A,4129.1234,N,07131.5678,W,0.12,87.30,291026,,,A,V*2E");
-        // gps_init(); // sets up the UART and the driver, on the kit pins
+        //gps_init(); // sets up the UART and the driver, on the kit pins
         gps_fix_t test = {0};
-        if (true)
+        if ((gps_update(&test)))
         {
             printf("test: %s %.6f, %.6f\r\n", test.fix_time, test.latitude_deg, test.longitude_deg);
         }
         // expect: test: 14:30:12.000 41.485390, -71.52613
 
-
-    sleep_ms(SAMPLE_PERIOD_MS);
-    while (true)
-    {
         double time_s = to_ms_since_boot(get_absolute_time()) / 1000.0; // convert millisec to sec
         float lux = sensors_read_lux();                                 // read the photocell once, returns illuminance in lux
         float temp_c = sensors_read_celsius();                          // read the LM19 once, returns temperature in
