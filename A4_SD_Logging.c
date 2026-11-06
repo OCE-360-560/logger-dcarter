@@ -60,7 +60,7 @@ int main()
 
     init_i2c_bus();    // initialize the I2C bus for the IMU and INA219
     imu_init(I2C_BUS); // initialize the IMU and start the rotation vector report
-    
+
     sleep_ms(SAMPLE_PERIOD_MS);
 
     if (!sd_logger_open(PATH, LOG_HEADER))
@@ -77,8 +77,10 @@ int main()
 
     gps_fix_t fix = {0}; // main owns the fix
 
-    // gps_init();        // initialize the GPS and start the UART and driver
-    //gps_start_raw_log("nemean_lion.txt");
+    if (!gps_init() || !gps_start_raw_log("nmea.txt"))
+    {
+        halt();
+    }
 
     // GPS Update
     // gps_update(&fix); // & passes fix's address, so the function can fill in main's fix
@@ -86,10 +88,10 @@ int main()
     sleep_ms(SAMPLE_PERIOD_MS);
     while (true)
     {
-        // GPS test 
+        // GPS test
         // test first, before gps_init(): no real sentence can arrive yet
         air530_parse("$GNRMC,143012.000,A,4129.1234,N,07131.5678,W,0.12,87.30,291026,,,A,V*2E");
-        //gps_init(); // sets up the UART and the driver, on the kit pins
+        // gps_init(); // sets up the UART and the driver, on the kit pins
         gps_fix_t test = {0};
         if ((gps_update(&test)))
         {
