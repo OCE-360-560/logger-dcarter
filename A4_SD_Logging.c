@@ -34,6 +34,9 @@
 #define PATH "GPS_logger_data_2.csv" // file name on the SD card
 
 #define PATH_GPS "nmea.txt" // file name on the SD card
+#define SAMPLE_PERIOD_MS 100
+#define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy\r\n"
+#define PATH "Logger_data_v3.csv" // file name on the SD card
 
 //  Assignmnt 6
 #define I2C_BUS i2c1
