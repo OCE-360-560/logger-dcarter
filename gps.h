@@ -3,7 +3,6 @@
  * The GPS setup for the GPS sensor.
  * Uses the Air530 driver from GITHUB, provided to us.
  * 
- *
  * Author: David Carter
  * License: MIT (see LICENSE)
  */

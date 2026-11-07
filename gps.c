@@ -29,7 +29,6 @@ Liscenc MIT
 #define KNOT2MPS 0.514444; // convert knots to m/s
 static FIL log_file;
 static FATFS filesystem;
-// UINT bw; // bytes written
 
 /** Append one line and sync it to the card.
  * Returns false if any part didn't reach the card. */
