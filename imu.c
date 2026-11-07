@@ -112,10 +112,13 @@ bool imu_read_pose(imu_pose_t *pose)
 
 }
 
-void imu_tare(void)
+bool imu_tare(void)
 {
-    if (!bno08x_tare_now(BNO08X_TARE_BASIS_ROTATION_VECTOR, BNO08X_TARE_BASIS_ROTATION_VECTOR))
-    {
-        printf("# IMU tare failed\r\n");
-    }
+   return  bno08x_tare_now(0x04, 0x00);  // Tare all axes (0x07) or heading only (0x04,Z) with respect to the default basis (0x00)
+            printf("Tare function activated. Orientation reference changed.\r\n");
+}
+
+bool imu_tare_clear(void)
+{
+   return  bno08x_clear_tare();  
 }

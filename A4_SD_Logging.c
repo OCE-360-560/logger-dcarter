@@ -50,19 +50,11 @@ int main()
     sensors_init();   // initialize the ADC and both sensor pins
     sd_logger_init(); // initialize the SD card and SPI pins
 
-    // // Stretch goal: change the orientation reference by taring the IMU
-    // printf("Press the Y key to activate the function tare to change orientation reference\n");
-    // int key;
-    // scanf("%d", &key);  // Reads a key press (integer)
-    // if (key == 'y' || key == 'Y')
-    // {
-    //     imu_tare();
-    // }
-
     init_i2c_bus();    // initialize the I2C bus for the IMU and INA219
     imu_init(I2C_BUS); // initialize the IMU and start the rotation vector report
 
     sleep_ms(SAMPLE_PERIOD_MS);
+    // sleep_until(SAMPLE_PERIOD_MS);
 
     if (!sd_logger_open(PATH, LOG_HEADER))
     {
@@ -87,6 +79,17 @@ int main()
     sleep_ms(SAMPLE_RATE_MS);
     while (true)
     {
+        // Stretch goal: change the orientation reference by taring the IMU
+        int key = getchar_timeout_us(0); // PICO_ERROR_TIMEOUT if nothing was typed
+        if (key == 'y')                  // type y in the Serial Monitor's send box
+        {
+            imu_tare();
+        }
+        // else
+        // {
+        //     imu_tare_clear();
+        // }
+
         double time_s = to_ms_since_boot(get_absolute_time()) / 1000.0; // convert millisec to sec
         float lux = sensors_read_lux();                                 // read the photocell once, returns illuminance in lux
         float temp_c = sensors_read_celsius();                          // read the LM19 once, returns temperature in
