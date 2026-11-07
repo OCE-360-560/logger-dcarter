@@ -1,12 +1,14 @@
 /* Function call for gps creating pin setup and initializing the gps driver.
- 
-wiring: 
+ Also takes the saved GPS data and allows it to be stored on a SD card .csv file 
 
+Wiring: 
+Grove GPS label     Pico 2      Pin
+VIN                 3V3(OUT)    36
+GND                 GND         38 (any GND)
+TXD                 GP5         7
+RXD                 GP4         6
 
-
-
-
-Author:
+Author: David Carter
 Liscenc MIT
 */
 
@@ -24,7 +26,7 @@ Liscenc MIT
 #define GPS_UART uart1
 #define GPS_TX_PIN 4 // Pico TX -> GPS RXD
 #define GPS_RX_PIN 5 // Pico RX <- GPS TXD
-
+#define KNOT2MPS 0.514444; // convert knots to m/s
 static FIL log_file;
 static FATFS filesystem;
 // UINT bw; // bytes written
@@ -34,8 +36,6 @@ static FATFS filesystem;
 static void write_raw_sentence(const char *sentence)
 {
     UINT bw; // bytes written
-
-    // f_write(&log_file, sentence, sentence_len, &bw); // into the buffer
     FRESULT fr = f_write(&log_file, sentence, strlen(sentence), &bw); // into the buffer
     fr = f_write(&log_file, "\r\n", sizeof("\r\n"), &bw);             // into the buffer
     f_sync(&log_file);
@@ -56,11 +56,11 @@ bool gps_init(void)
 
 bool gps_update(gps_fix_t *fix)
 {
-    air530_service(); // Parse the latest sentences, if any, and update the fix
+    air530_service();                           // Parse the latest sentences, if any, and update the fix
     air530_fix_t latest = {0};
     if (air530_get_fix(&latest) == false)
     {
-        return false; // no new fix since last call
+        return false;                           // no new fix since last call
     }
 
     fix->latitude_deg = latest.latitude_deg;
@@ -68,9 +68,8 @@ bool gps_update(gps_fix_t *fix)
     fix->altitude_m = latest.altitude_m;
     fix->satellites_used = latest.satellites_used;
     fix->hdop = latest.hdop;
-    fix->speed_mps = latest.speed_knots * 0.514444; // convert knots to m/s
+    fix->speed_mps = latest.speed_knots * KNOT2MPS;     // convert knots to m/s
     fix->course_deg = latest.course_deg;
-    // fix->fix_date[11] = latest.date_valid;
     if (latest.date_valid)
     {
         snprintf(fix->fix_date, 11, "%03u-%02u-%02u", latest.year, latest.month, latest.day);
@@ -88,7 +87,7 @@ bool gps_start_raw_log(const char *path) // every sentence to a file on the SD c
 {
     // Open the file for writing, creating it if it doesn't exist
     // static FIL file;
-    FRESULT fr = f_open(&log_file, path,  FA_WRITE | FA_OPEN_APPEND);
+    FRESULT fr = f_open(&log_file, path, FA_OPEN_APPEND | FA_WRITE);
     if (fr != FR_OK)
     {
         printf("f_open in gps_start_raw_log.  Failed to open file for writing: %d\n", fr);

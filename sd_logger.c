@@ -11,6 +11,7 @@
 #include "ff.h"      // FatFs: f_mount, f_open, f_write, f_sync
 #include "tf_card.h" // pico_fatfs: SD card pins and clock
 #include "imu.h"
+#include "gps.h"
 
 #define PIN_SCK 18
 #define PIN_TX 19 // PICO: to the card's DI
@@ -47,8 +48,6 @@ static pico_fatfs_spi_config_t sd_config = {
 
 void halt(void){
     printf("Halting program.\r\n");
-    // while (true)
-    //     tight_loop_contents();
     return; // return to main() and let it loop forever
 }
 
@@ -78,20 +77,28 @@ bool sd_logger_open(const char *path, const char *header)
 /** Append one line and sync it to the card.
  * Returns false if any part didn't reach the card. */
 // bool sd_logger_write(double time_s, float lux, float temp_c)
-bool sd_logger_write(double time_s, float lux, float temp_c, imu_pose_t *pose)
+bool sd_logger_write(double time_s, float lux, float temp_c, imu_pose_t *pose, gps_fix_t *fix)
 {
-    // f_write(&log_file, line, strlen(line), &bw);
-    // f_sync(&log_file);
-    // return (bw == strlen(line));
-    char line[128];
-     int len =  snprintf(line, sizeof line, "%.3f, %.3f, %.3f, %.4f, %.4f, %.4f, %.4f, %.1f, %.1f, %.1f, %u\r\n",
-             time_s, lux, temp_c, pose->qw, pose->qx, pose->qy, pose->qz,
-             pose->roll_deg, pose->pitch_deg, pose->yaw_deg, pose->accuracy);
+    char line[256];
+    int len = snprintf(line, sizeof line, "%.3f, %.3f, %.3f, %.4f, %.4f, %.4f, %.4f, %.1f, %.1f, %.1f, %u, "
+                       "%s, %s, %d, %.6f, %.6f, %.2f, %u, %.2f, %.2f, %.2f\r\n",
+                       time_s, lux, temp_c,
+                       pose->qw, pose->qx, pose->qy, pose->qz,
+                       pose->roll_deg, pose->pitch_deg, pose->yaw_deg,
+                       pose->accuracy,
+                       fix->fix_date,
+                       fix->fix_time,
+                       fix->valid,
+                       fix->latitude_deg,
+                       fix->longitude_deg,
+                       fix->altitude_m,
+                       fix->satellites_used,
+                       fix->hdop,
+                       fix->speed_mps,
+                       fix->course_deg);
 
-    // printf("%s", line);                 // Serial Monitor 
     f_write(&log_file, line, len, &bw); // into the buffer
-    f_sync(&log_file);  
-                    // onto the card
+    f_sync(&log_file);                  // onto the card
 };
 
 /** Close the file and unmount. Safe to remove after. */

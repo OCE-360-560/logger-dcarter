@@ -27,11 +27,12 @@
 #include "gps.h"
 #include "air530.h"
 
-#define SAMPLE_PERIOD_MS 100
-#define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy\r\n"
-#define PATH "Logger_data_v1.csv" // file name on the SD card
+#define SAMPLE_PERIOD_MS 1000
+#define SAMPLE_RATE_MS 100
+#define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy, " \
+                   "fix_date, fix_time, gps_valid, lat_deg, lon_deg, alt_m, satellites, hdop, speed_mps, course_deg\r\n"
+#define PATH "GPS_logger_data_2.csv" // file name on the SD card
 
-// #define LOG_HEADER_GPS "fix_date, fix_time, gps_valid, lat_deg, lon_deg, alt_m, satellites, hdop, speed_mps,course_deg\r\n"
 #define PATH_GPS "nmea.txt" // file name on the SD card
 
 //  Assignmnt 6
@@ -75,47 +76,43 @@ int main()
     }
     imu_pose_t pose = {0}; // main owns the pose
 
-    gps_fix_t fix = {0}; // main owns the fix
+    gps_fix_t fix = {0};
 
-    if (!gps_init() || !gps_start_raw_log("nmea.txt"))
+    if (!gps_init() || !gps_start_raw_log(PATH_GPS))
     {
         halt();
     }
 
-    // GPS Update
-    // gps_update(&fix); // & passes fix's address, so the function can fill in main's fix
-
-    sleep_ms(SAMPLE_PERIOD_MS);
+    double next_sample_t = get_absolute_time(); // first sample delayed by one period
+    sleep_ms(SAMPLE_RATE_MS);
     while (true)
     {
-        // GPS test
-        // test first, before gps_init(): no real sentence can arrive yet
-        air530_parse("$GNRMC,143012.000,A,4129.1234,N,07131.5678,W,0.12,87.30,291026,,,A,V*2E");
-        // gps_init(); // sets up the UART and the driver, on the kit pins
-        gps_fix_t test = {0};
-        if ((gps_update(&test)))
-        {
-            printf("test: %s %.6f, %.6f\r\n", test.fix_time, test.latitude_deg, test.longitude_deg);
-        }
-        // expect: test: 14:30:12.000 41.485390, -71.52613
-
         double time_s = to_ms_since_boot(get_absolute_time()) / 1000.0; // convert millisec to sec
         float lux = sensors_read_lux();                                 // read the photocell once, returns illuminance in lux
         float temp_c = sensors_read_celsius();                          // read the LM19 once, returns temperature in
 
         imu_read_pose(&pose); // fills in main's pose; keeps the last one if nothing new arrived
 
-        //  if (!sd_logger_write(time_s, lux, temp_c))
-        if (!sd_logger_write(time_s, lux, temp_c, &pose))
+        // GPS test
+        next_sample_t = delayed_by_ms(
+            next_sample_t, SAMPLE_RATE_MS);
+        while (!time_reached(next_sample_t))
+        {
+            gps_update(&fix);
+        }
+        if ((gps_update(&fix)))
+        {
+            printf("fix: %s %.6f, %.6f\r\n", fix.fix_time, fix.latitude_deg, fix.longitude_deg);
+        }
+
+        // Write the data to the SD card
+        if (!sd_logger_write(time_s, lux, temp_c, &pose, &fix))
             // printf("# SD write failed\r\n");
 
             printf("Roll, Pitch, Yaw, Accuracy\r\n");
         printf("%.1f, %.1f, %.1f, %u\r\n",
                pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy);
-        /*  printf("Time, lux, temp_c\r\n");
-         printf("%.3f, %.3f, %.3f\r\n",
-                time_s, lux, temp_c); */
 
-        sleep_ms(SAMPLE_PERIOD_MS);
+        sleep_until(next_sample_t);
     }
 }
