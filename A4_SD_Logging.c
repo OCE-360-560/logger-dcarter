@@ -36,7 +36,7 @@
 #define PATH "GPS_logger_data.csv" // file name on the SD card
 
 #define PATH_GPS "nmea.txt" // file name on the SD card
-//#define SAMPLE_PERIOD_MS 100
+// #define SAMPLE_PERIOD_MS 100
 #//define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy\r\n"
 // #define PATH "Logger_data_v3.csv" // file name on the SD card
 
@@ -91,9 +91,14 @@ int main()
     Motor my_motor = {.gpio_pin = 26,
                       .direction_pin1 = 27,
                       .direction_pin2 = 28,
-                      .period_us = 10000};
-motor_init(&my_motor);
-
+                      .period_us = 10000,
+    
+                      // Lab 9
+                    .encoder_pin = 22,
+                    .encoder_ppr=52.8, // motor depends on 211.2/4.0 or 116.16 or 135
+                    };
+    motor_init(&my_motor);
+    motor_set_duty_cycle(&my_motor, 0.4f); // Set initial motor speed to 0%
 
     double next_sample_t = get_absolute_time(); // first sample delayed by one period
     sleep_ms(SAMPLE_RATE_MS);
@@ -110,7 +115,7 @@ motor_init(&my_motor);
         sleep_ms(1000); */
 
         // Motor testing code
-        motor_set_duty_cycle(&my_motor, 0.5f); // Set motor speed to 50%
+        /* motor_set_duty_cycle(&my_motor, 0.5f); // Set motor speed to 50%
         sleep_ms(1000); // Run motor for 2 seconds
 
         motor_set_duty_cycle(&my_motor, 0.0f); // Set motor speed to 0%
@@ -121,7 +126,9 @@ motor_init(&my_motor);
 
         motor_set_duty_cycle(&my_motor, 0.0f); // Set motor speed to 0%
         sleep_ms(1000); // Wait for 1 second
-
+ */
+        motor_update(&my_motor); // Update encoder count and calculate RPM
+        sleep_ms(1000);
 
         // Stretch goal: change the orientation reference by taring the IMU
         int key = getchar_timeout_us(0); // PICO_ERROR_TIMEOUT if nothing was typed
@@ -152,9 +159,9 @@ motor_init(&my_motor);
         if (!sd_logger_write(time_s, lux, temp_c, &pose, &fix))
             // printf("# SD write failed\r\n");
 
-            printf("Roll, Pitch, Yaw, Accuracy\r\n");
-        printf("%.1f, %.1f, %.1f, %u\r\n",
-               pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy);
+        //     printf("Roll, Pitch, Yaw, Accuracy\r\n");
+        // printf("%.1f, %.1f, %.1f, %u\r\n",
+        //        pose.roll_deg, pose.pitch_deg, pose.yaw_deg, pose.accuracy);
 
         sleep_until(next_sample_t);
     }

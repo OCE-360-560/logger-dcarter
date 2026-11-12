@@ -10,9 +10,19 @@ typedef struct {
     uint direction_pin1;     // GPIO pin number for the motor direction (forward)
     uint direction_pin2;     // GPIO pin number for the motor direction (reverse)
     uint16_t period_us;  // Minimum pulse width in microseconds (e.g., 1000)
+    // Encoder configuration
+    uint encoder_pin;
+    float encoder_ppr;
+
+    // Encoder measurement state
+    volatile int32_t encoder_count; // Current encoder count
+    uint32_t last_encoder_count; // Timestamp of the last encoder pulse
+    uint32_t last_update_us; // Last encoder count for speed calculation
+    float rpm; // Calculated RPM based on encoder counts
 } Motor;
 
 void motor_init(Motor *motor);
 void motor_set_duty_cycle(Motor *motor, float duty); // Speed range: -1.
+void motor_update(Motor *motor); // Update encoder count and calculate RPM
 
 #endif // MOTOR_H 
