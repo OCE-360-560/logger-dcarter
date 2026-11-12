@@ -39,7 +39,11 @@ add_subdirectory(lib/pico_fatfs)
 add_subdirectory(lib/bno08x)
 add_subdirectory(lib/air530)
 
-add_executable(A4_SD_Logging A4_SD_Logging.c sensors.c sd_logger.c imu.c gps.c)
+add_executable(A4_SD_Logging A4_SD_Logging.c 
+sensors.c sd_logger.c 
+imu.c 
+gps.c
+servo.c motor.c)
 
 pico_set_program_name(A4_SD_Logging "A4_SD_Logging")
 pico_set_program_version(A4_SD_Logging "0.1")
@@ -50,7 +54,7 @@ pico_enable_stdio_usb(A4_SD_Logging 1)
 
  target_link_libraries(A4_SD_Logging pico_stdlib 
                         hardware_adc hardware_spi pico_fatfs hardware_i2c 
-                        bno08x air530 hardware_uart )
+                        bno08x air530 hardware_uart  hardware_pwm)
 # Add the standard library to the build
 
 

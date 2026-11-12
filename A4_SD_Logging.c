@@ -13,30 +13,32 @@
 
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/spi.h"
+// #include "hardware/spi.h"
 #include <stdio.h>
-#include "hardware/gpio.h"
-#include "hardware/adc.h"
-#include "hardware/spi.h"
-#include "tf_card.h"   // pico_fatfs: SD card pins and clock
+// #include "hardware/gpio.h"
+// #include "hardware/adc.h"
+// #include "hardware/spi.h"
+// #include "tf_card.h"   // pico_fatfs: SD card pins and clock
 #include "sensors.h"   // photocell and LM19 temperature sensor
 #include "sd_logger.h" // SD card logging
-#include "hardware/i2c.h"
-#include "bno08x.h"
-#include "imu.h"
-#include "gps.h"
-#include "air530.h"
+// #include "hardware/i2c.h"
+// #include "bno08x.h"
+// #include "imu.h"
+// #include "gps.h"
+// #include "air530.h"
+#include "servo.h"
+#include "motor.h"
 
 #define SAMPLE_PERIOD_MS 1000
 #define SAMPLE_RATE_MS 100
 #define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy, " \
                    "fix_date, fix_time, gps_valid, lat_deg, lon_deg, alt_m, satellites, hdop, speed_mps, course_deg\r\n"
-#define PATH "GPS_logger_data_2.csv" // file name on the SD card
+#define PATH "GPS_logger_data.csv" // file name on the SD card
 
 #define PATH_GPS "nmea.txt" // file name on the SD card
-#define SAMPLE_PERIOD_MS 100
-#define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy\r\n"
-#define PATH "Logger_data_v3.csv" // file name on the SD card
+//#define SAMPLE_PERIOD_MS 100
+#//define LOG_HEADER "time_s, lux, temp_C, qw, qx, qy, qz, roll_deg, pitch_deg, yaw_deg, imu_accuracy\r\n"
+// #define PATH "Logger_data_v3.csv" // file name on the SD card
 
 //  Assignmnt 6
 #define I2C_BUS i2c1
@@ -78,20 +80,55 @@ int main()
         halt();
     }
 
+    // Servo testing code
+  /*   Servo my_servo = {.gpio_pin = 14,
+                      .period_us = 20000,
+                      .min_pulse_us = 500,
+                      .max_pulse_us = 2500};
+
+    servo_init(&my_servo); */
+    // Motor testing code
+    Motor my_motor = {.gpio_pin = 26,
+                      .direction_pin1 = 27,
+                      .direction_pin2 = 28,
+                      .period_us = 10000};
+motor_init(&my_motor);
+
+
     double next_sample_t = get_absolute_time(); // first sample delayed by one period
     sleep_ms(SAMPLE_RATE_MS);
     while (true)
     {
+// Servo testing code
+/* servo_set_angle(&my_servo, 0.0f);
+        sleep_ms(1000);
+
+        servo_set_angle(&my_servo, 90.0f);
+        sleep_ms(1000);
+
+        servo_set_angle(&my_servo, 180.0f);
+        sleep_ms(1000); */
+
+        // Motor testing code
+        motor_set_duty_cycle(&my_motor, 0.5f); // Set motor speed to 50%
+        sleep_ms(1000); // Run motor for 2 seconds
+
+        motor_set_duty_cycle(&my_motor, 0.0f); // Set motor speed to 0%
+        sleep_ms(1000); // Wait for 1 second
+
+        motor_set_duty_cycle(&my_motor, -0.5f); // Set motor speed to -50%
+        sleep_ms(1000); // Run motor for 2 seconds
+
+        motor_set_duty_cycle(&my_motor, 0.0f); // Set motor speed to 0%
+        sleep_ms(1000); // Wait for 1 second
+
+
         // Stretch goal: change the orientation reference by taring the IMU
         int key = getchar_timeout_us(0); // PICO_ERROR_TIMEOUT if nothing was typed
         if (key == 'y')                  // type y in the Serial Monitor's send box
         {
             imu_tare();
         }
-        // else
-        // {
-        //     imu_tare_clear();
-        // }
 
         double time_s = to_ms_since_boot(get_absolute_time()) / 1000.0; // convert millisec to sec
         float lux = sensors_read_lux();                                 // read the photocell once, returns illuminance in lux
