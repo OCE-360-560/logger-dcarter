@@ -4,9 +4,10 @@
 #include <stdint.h>
 #include "pico/stdlib.h"
 #include <stdio.h>
+#include "imu.h"
 
 typedef struct {
-    uint gpio_pin;          // GPIO pin number for the motor
+    uint signal_pin;          // GPIO pin number for the motor
     uint direction_pin1;     // GPIO pin number for the motor direction (forward)
     uint direction_pin2;     // GPIO pin number for the motor direction (reverse)
     uint16_t period_us;  // Minimum pulse width in microseconds (e.g., 1000)
@@ -24,5 +25,6 @@ typedef struct {
 void motor_init(Motor *motor);
 void motor_set_duty_cycle(Motor *motor, float duty); // Speed range: -1.
 void motor_update(Motor *motor); // Update encoder count and calculate RPM
+// void motor_set_duty_cycle_stretch(Motor *motor, imu_pose_t *pose)
 
 #endif // MOTOR_H 

@@ -28,6 +28,7 @@
 // #include "air530.h"
 #include "servo.h"
 #include "motor.h"
+#include "ina219.h"
 
 #define SAMPLE_PERIOD_MS 1000
 #define SAMPLE_RATE_MS 100
@@ -81,54 +82,83 @@ int main()
     }
 
     // Servo testing code
-  /*   Servo my_servo = {.gpio_pin = 14,
+    Servo my_servo = {.signal_pin = 16,
                       .period_us = 20000,
                       .min_pulse_us = 500,
                       .max_pulse_us = 2500};
 
-    servo_init(&my_servo); */
+    servo_init(&my_servo);
+
     // Motor testing code
-    Motor my_motor = {.gpio_pin = 26,
+    Motor my_motor = {.signal_pin = 26,
                       .direction_pin1 = 27,
                       .direction_pin2 = 28,
-                      .period_us = 10000,
-    
+                      .period_us = 1000,
+
                       // Lab 9
                     .encoder_pin = 22,
-                    .encoder_ppr=52.8, // motor depends on 211.2/4.0 or 116.16 or 135
+                    .encoder_ppr= 12/4*45, // motor depends on 211.2/4.0 or 116.16 or 135
                     };
     motor_init(&my_motor);
-    motor_set_duty_cycle(&my_motor, 0.4f); // Set initial motor speed to 0%
+    float duty= pose.pitch_deg/90;
+    // motor_set_duty_cycle(&my_motor, 0.4f); // Set initial motor speed to 0%
+    motor_set_duty_cycle(&my_motor, duty); // Set initial motor speed to 0%
+
+    
+//ina219 code
+INA219 ina;
+if(ina219_init(&ina, I2C_BUS, INA219_ADDR_40, 0.1f, 3.2f) !=0){
+    printf("INA219 init failed\r\n");
+    halt();
+}
+printf("INA219 raedy\r\n");
 
     double next_sample_t = get_absolute_time(); // first sample delayed by one period
     sleep_ms(SAMPLE_RATE_MS);
+   
     while (true)
     {
 // Servo testing code
 /* servo_set_angle(&my_servo, 0.0f);
-        sleep_ms(1000);
+        sleep_ms(100);
 
         servo_set_angle(&my_servo, 90.0f);
-        sleep_ms(1000);
+        sleep_ms(100);
 
         servo_set_angle(&my_servo, 180.0f);
-        sleep_ms(1000); */
+        sleep_ms(100); */
+
+        float pitch_servo=pose.roll_deg+90;        
+        float duty_motor= pose.pitch_deg/180;
 
         // Motor testing code
-        /* motor_set_duty_cycle(&my_motor, 0.5f); // Set motor speed to 50%
-        sleep_ms(1000); // Run motor for 2 seconds
+        servo_set_angle(&my_servo, pitch_servo);
+        motor_set_duty_cycle(&my_motor, duty_motor); // Set motor speed to 50%
+        sleep_ms(100); // Run motor for 2 seconds
 
-        motor_set_duty_cycle(&my_motor, 0.0f); // Set motor speed to 0%
-        sleep_ms(1000); // Wait for 1 second
+        // motor_set_duty_cycle(&my_motor, duty); // Set motor speed to 0%
+        // sleep_ms(1000); // Wait for 1 second
+        //
+        // motor_set_duty_cycle(&my_motor, duty); // Set motor speed to -50%
+        // sleep_ms(1000); // Run motor for 2 seconds
+        //
+        // motor_set_duty_cycle(&my_motor, duty); // Set motor speed to 0%
+        // sleep_ms(1000); // Wait for 1 second
+        //
+        // Stretch exercise
+        // float duty= pose.pitch_deg/90;
+        // motor_set_duty_cycle(&my_motor, duty); // Set initial motor speed to 0%
+        // motor_update(&my_motor); // Update encoder count and calculate RPM
+        printf("Pitch  %.6f\r\n", pose.pitch_deg);
+    
+     // INA219
+        float volts = ina219_read_bus_voltage(&ina);
+        float amps = ina219_read_current_amps(&ina);
+        float watts = ina219_read_power_watts(&ina);
+        printf("V=%.2f A=%.3f W=%.3f\r\n", volts, amps, watts);
 
-        motor_set_duty_cycle(&my_motor, -0.5f); // Set motor speed to -50%
-        sleep_ms(1000); // Run motor for 2 seconds
+        sleep_ms(100);
 
-        motor_set_duty_cycle(&my_motor, 0.0f); // Set motor speed to 0%
-        sleep_ms(1000); // Wait for 1 second
- */
-        motor_update(&my_motor); // Update encoder count and calculate RPM
-        sleep_ms(1000);
 
         // Stretch goal: change the orientation reference by taring the IMU
         int key = getchar_timeout_us(0); // PICO_ERROR_TIMEOUT if nothing was typed
