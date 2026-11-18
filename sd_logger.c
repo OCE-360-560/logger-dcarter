@@ -76,26 +76,12 @@ bool sd_logger_open(const char *path, const char *header)
 
 /** Append one line and sync it to the card.
  * Returns false if any part didn't reach the card. */
-// bool sd_logger_write(double time_s, float lux, float temp_c)
-bool sd_logger_write(double time_s, float lux, float temp_c, imu_pose_t *pose, gps_fix_t *fix)
+bool sd_logger_write(double time_s, float volts, float amps, float watts, float pitch_servo, float duty_motor)
 {
     char line[256];
-    int len = snprintf(line, sizeof line, "%.3f, %.3f, %.3f, %.4f, %.4f, %.4f, %.4f, %.1f, %.1f, %.1f, %u, "
-                       "%s, %s, %d, %.6f, %.6f, %.2f, %u, %.2f, %.2f, %.2f\r\n",
-                       time_s, lux, temp_c,
-                       pose->qw, pose->qx, pose->qy, pose->qz,
-                       pose->roll_deg, pose->pitch_deg, pose->yaw_deg,
-                       pose->accuracy,
-                       fix->fix_date,
-                       fix->fix_time,
-                       fix->valid,
-                       fix->latitude_deg,
-                       fix->longitude_deg,
-                       fix->altitude_m,
-                       fix->satellites_used,
-                       fix->hdop,
-                       fix->speed_mps,
-                       fix->course_deg);
+    int len = snprintf(line, sizeof line, "%.3f, %.6f, %.6f, %.6f, %.6f, %.6f\r\n",
+                       time_s, volts, amps,
+                       watts, pitch_servo, duty_motor);
 
     f_write(&log_file, line, len, &bw); // into the buffer
     f_sync(&log_file);                  // onto the card
