@@ -1,6 +1,7 @@
 #include "servo.h"
 #include "hardware/pwm.h"
 #include "hardware/clocks.h"
+#include "pico/stdlib.h"
 
 void servo_init(Servo *servo) {
     // Set the GPIO pin as an output
@@ -18,10 +19,10 @@ void servo_init(Servo *servo) {
     pwm_set_wrap(slice_num, servo->period_us - 1);
     
 // Initialize at the midpoint of the pulse range
-    uint16_t pulse_us=(servo->min_pulse_us + servo->max_pulse_us) / 2; // Start at the middle position
+    servo->pulse_us=(servo->min_pulse_us + servo->max_pulse_us) / 2; // Start at the middle position
    
     // Set the initial pulse width to the minimum
-    pwm_set_gpio_level(servo->signal_pin, pulse_us);    
+    pwm_set_gpio_level(servo->signal_pin, servo->pulse_us);    
     
     // Enable the PWM output
     pwm_set_enabled(slice_num, true);
@@ -37,9 +38,8 @@ void servo_set_angle(Servo *servo, float angle) {
     }
 
     // Map the angle to the corresponding pulse width
-    // uint16_t pulse_us = (uint16_t)(servo->min_pulse_us + (angle / 180.0f) * (servo->max_pulse_us - servo->min_pulse_us));
-    uint16_t pulse_us = (servo->min_pulse_us + (angle / 180.0f) * (servo->max_pulse_us - servo->min_pulse_us));
-    
+    servo->pulse_us = (servo->min_pulse_us + (angle / 180.0f) * (servo->max_pulse_us - servo->min_pulse_us));
+
     // Set the PWM level for the GPIO pin
-    pwm_set_gpio_level(servo->signal_pin, pulse_us);
+    pwm_set_gpio_level(servo->signal_pin, servo->pulse_us);
 }

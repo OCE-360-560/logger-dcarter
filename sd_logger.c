@@ -4,14 +4,15 @@
 #include "hardware/spi.h"
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "hardware/spi.h"
 #include "ff.h"      // FatFs: f_mount, f_open, f_write, f_sync
 #include "tf_card.h" // pico_fatfs: SD card pins and clock
 #include "imu.h"
-#include "gps.h"
+#include "servo.h"
+#include "motor.h"
+
 
 #define PIN_SCK 18
 #define PIN_TX 19 // PICO: to the card's DI
@@ -76,12 +77,12 @@ bool sd_logger_open(const char *path, const char *header)
 
 /** Append one line and sync it to the card.
  * Returns false if any part didn't reach the card. */
-bool sd_logger_write(double time_s, float volts, float amps, float watts, float pitch_servo, float duty_motor)
+bool sd_logger_write(double time_s, float volts, float amps, float watts, float pitch_servo, float duty_motor, imu_pose_t *pose, Servo *servo,Motor *motor)
 {
     char line[256];
-    int len = snprintf(line, sizeof line, "%.3f, %.6f, %.6f, %.6f, %.6f, %.6f\r\n",
+    int len = snprintf(line, sizeof line, "%.3f, %.6f, %.6f, %.6f, %.6f, %.6f,%.6f, %.6f, %d, %.6f\r\n",
                        time_s, volts, amps,
-                       watts, pitch_servo, duty_motor);
+                       watts, pitch_servo, duty_motor, pose->pitch_deg, pose->roll_deg, servo->pulse_us, motor->rpm);
 
     f_write(&log_file, line, len, &bw); // into the buffer
     f_sync(&log_file);                  // onto the card

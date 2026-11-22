@@ -16,9 +16,6 @@ static void encoder_irq_handler(uint gpio, uint32_t events)
         gpio == motor->encoder_pin && 
         (events & GPIO_IRQ_EDGE_RISE)){
         motor->encoder_count++;
-        // printf("encoder count = %d\r\n", motor->encoder_count);
-        // printf("encoder pin = %d\r\n", motor->encoder_pin);
-
     }
 }
 void motor_init(Motor *motor)
@@ -101,54 +98,18 @@ void motor_update(Motor *motor)
     if (elapsed < RPM_UPDATE_INTERVAL_US){
         return;
     }
-    printf("count = %d\r\n", motor->encoder_count);
+    // printf("count = %d\r\n", motor->encoder_count);
     
     // Snapshot and reset encoder coutner atomically
         uint32_t irq_state = save_and_disable_interrupts();
         uint32_t pulses=motor->encoder_count;
         motor->encoder_count=0;
         restore_interrupts(irq_state);
-        // printf("irq_state = %d\r\n", irq_state);
 
         // pulses/ppr/elapsed time get revolution per micor seconds, then times 60.0*1,000,000 to get RPM
         motor->rpm = (float)pulses *60.0f *1000000.0f/ 
         (motor->encoder_ppr * (float)elapsed);
 
-        printf("rpm = %.2f, dt=%lu\r\n", motor->rpm, (unsigned long)elapsed);
 
         motor-> last_update_us = now;
     }
-
-
-/* void motor_set_duty_cycle_stretch(Motor *motor, float duty,imu_pose_t *pose)
-{
-    // uint16_t pulse_us = 0;
-    // Clamp duty cycle to the range [-1.0, 1.0]
-    if (duty > 1.0f)
-    {
-        duty = 1.0f;
-    }
-    if (duty < -1.0f)
-    {
-        duty = -1.0f;
-    }
-
-    // Determine direction based on the sign of the duty cycle
-    if (duty >= 0)
-    {
-        gpio_put(motor->direction_pin1, true);
-        gpio_put(motor->direction_pin2, false);
-        pulse_us = (uint16_t)(duty * motor->period_us);
-    }
-    else
-    {
-        gpio_put(motor->direction_pin1, false);
-        gpio_put(motor->direction_pin2, true);
-        duty = -duty; // Make duty positive for PWM calculation
-    }
-
-    // printf("pulse =%d\n", pulse_us);
-    // Set the PWM level for the signal pin
-    pwm_set_gpio_level(motor->signal_pin, pulse_us);
-}
- */

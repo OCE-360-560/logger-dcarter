@@ -3,15 +3,10 @@
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "hardware/spi.h"
-#include "ff.h"        // FatFs: f_mount, f_open, f_write, f_sync
-#include "tf_card.h"   // pico_fatfs: SD card pins and clock
-#include "sensors.h"   // photocell and LM19 temperature sensor
-#include "sd_logger.h" // SD card logging
 #include "hardware/i2c.h"
 #include "bno08x.h"
 #include "imu.h"

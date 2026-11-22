@@ -3,7 +3,6 @@
 #define SD_LOGGER_H
 
 #include "imu.h"
-#include "gps.h"
 #include "servo.h"
 #include "motor.h"
 
@@ -20,8 +19,7 @@ bool sd_logger_open(const char *path, const char *header);
 
 /** Append one line and sync it to the card.
  * Returns false if any part didn't reach the card. */
-// bool sd_logger_write(double time_s, float lux, float temp_c, imu_pose_t *pose, gps_fix_t *fix);
-bool sd_logger_write(double time_s, float volts, float amps, float watts, float pitch_servo, float duty_motor);
+bool sd_logger_write(double time_s, float volts, float amps, float watts, float pitch_servo, float duty_motor, imu_pose_t *pose, Servo *servo, Motor *motor);
 
 /** Close the file and unmount. Safe to remove after. */
 void sd_logger_close(void);

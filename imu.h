@@ -11,16 +11,6 @@
 #include <stdint.h>
 #include "hardware/i2c.h"   // i2c_inst_t, for imu_init()
 
-/* typedef struct {          // a new type, like int or float
-    float roll_deg;       // its members
-    float pitch_deg;
-    uint8_t accuracy;     // uint8_t: a whole number 0 to 255
-} pose_t; */
-
-// pose_t now;                     // one variable holds them all
-// now.roll_deg = 12.5f;           // a dot picks one member
-// pose_t level = {.pitch_deg = 0.0f};   // name what you set; the rest are 0
-
 /** One orientation reading. Angles in degrees; the quaternion is unitless. */
 typedef struct {
     float qw, qx, qy, qz;   // quaternion (real part first)

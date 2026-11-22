@@ -1,9 +1,17 @@
+/*
+ * motor.h
+ * The motor setup for the brushless motor. This takes in the duty cycle of the motor and converts that into the 
+ * motor speed and rpm based upon the encoder_ppr or the roll of the board (stretch exercise)
+ *
+ * Author: David Carter
+ * License: MIT (see LICENSE)
+ */
+
 #ifndef MOTOR_H 
 #define MOTOR_H
 
 #include <stdint.h>
 #include "pico/stdlib.h"
-#include <stdio.h>
 #include "imu.h"
 
 typedef struct {
@@ -25,6 +33,5 @@ typedef struct {
 void motor_init(Motor *motor);
 void motor_set_duty_cycle(Motor *motor, float duty); // Speed range: -1.
 void motor_update(Motor *motor); // Update encoder count and calculate RPM
-// void motor_set_duty_cycle_stretch(Motor *motor, imu_pose_t *pose)
 
 #endif // MOTOR_H 
